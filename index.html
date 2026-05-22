@@ -3,63 +3,85 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>写真アニメーター FINAL</title>
+<title>キオクライブ</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Rampart+One&display=swap');
   :root {
-    --bg:#0d0d0d; --surface:#161616; --surface2:#1e1e1e;
-    --border:#2a2a2a; --border2:#333;
-    --text:#f0ede8; --text2:#888; --text3:#555;
-    --accent:#e8d5a3; --accent2:#c4a96a;
-    --green:#4ade80; --red:#f87171; --yellow:#fbbf24;
+    --bg:#f7f5f0; --surface:#ffffff; --surface2:#f0ece4;
+    --border:#e0d9ce; --border2:#ccc5b8;
+    --text:#2c2620; --text2:#7a6f64; --text3:#aaa098;
+    --accent:#8b6914; --accent2:#b58a2a;
+    --green:#16a34a; --red:#dc2626; --yellow:#d97706;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 20px;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px 60px;}
   .container{width:100%;max-width:560px;}
-  .header{margin-bottom:24px;}
-  .header h1{font-size:26px;font-weight:700;letter-spacing:-1px;color:var(--accent);}
-  .header p{font-size:12px;color:var(--text2);margin-top:5px;font-family:'DM Mono',monospace;}
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;}
-  .card-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);margin-bottom:10px;}
-  input[type="text"]{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;font-family:'DM Mono',monospace;color:var(--text);outline:none;transition:border-color .15s;}
-  input[type="text"]:focus{border-color:var(--accent2);}
+
+  /* Header */
+  .header{margin-bottom:28px;text-align:center;}
+  .header h1{font-size:36px;font-weight:400;letter-spacing:6px;color:var(--accent);font-family:'Rampart One',sans-serif;text-shadow:3px 3px 0px rgba(139,105,20,0.2);line-height:1.2;}
+  .header p{font-size:11px;color:var(--text3);margin-top:8px;font-family:'DM Mono',monospace;letter-spacing:2px;}
+
+  /* Card */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;}
+  .card-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);margin-bottom:12px;}
+
+  /* Step indicator */
+  .step-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .step-badge{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .step-title{font-size:14px;font-weight:600;color:var(--text);}
+  .step-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+
+  /* File input */
+  input[type="text"]{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;font-family:'DM Mono',monospace;color:var(--text);outline:none;}
   input[type="file"]{width:100%;padding:10px;font-size:13px;font-family:'DM Mono',monospace;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text2);cursor:pointer;outline:none;}
-  .note{font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;}
+  .note{font-size:11px;color:var(--text3);margin-top:6px;}
   .api-display{display:flex;align-items:center;justify-content:space-between;}
-  .api-display span{font-size:13px;font-family:'DM Mono',monospace;color:var(--text2);}
+  .api-display span{font-size:12px;font-family:'DM Mono',monospace;color:var(--text3);}
   .btn-tiny{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:'Syne',sans-serif;}
-  .btn-tiny:hover{border-color:var(--accent2);color:var(--accent2);}
-  .preview-wrap{border-radius:10px;overflow:hidden;background:#000;margin-top:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;position:relative;}
+  .btn-tiny:hover{border-color:var(--accent2);color:var(--accent);}
+
+  /* Preview */
+  .preview-wrap{border-radius:10px;overflow:hidden;background:#e8e4dc;margin-top:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;position:relative;}
   .preview-wrap img,.preview-wrap video{max-width:100%;max-height:100%;object-fit:contain;display:block;}
-  .preview-badge{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.75);color:#fff;font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px;}
-  .preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
-  .preset-btn{padding:10px 6px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:'Syne',sans-serif;text-align:center;transition:all .15s;width:100%;line-height:1.6;}
-  .preset-btn:hover:not(.active){border-color:var(--border);color:var(--text);}
+  .preview-badge{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px;}
+
+  /* Preset grid */
+  .preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .preset-btn{padding:12px 6px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;font-family:'Syne',sans-serif;text-align:center;transition:all .15s;width:100%;line-height:1.6;}
+  .preset-btn:hover:not(.active){border-color:var(--border2);color:var(--text);}
   .preset-btn.active{background:var(--surface2);border-color:var(--accent2);color:var(--accent);}
-  .preset-name{font-size:11px;font-weight:600;display:block;margin-top:2px;}
-  .preset-desc{font-size:9px;color:var(--text3);display:block;}
+  .preset-name{font-size:11px;font-weight:600;display:block;margin-top:3px;}
+  .preset-desc{font-size:9px;color:var(--text3);display:block;margin-top:1px;}
   .preset-btn.active .preset-desc{color:var(--text2);}
-  .sep{height:1px;background:var(--border);margin:14px 0;}
+
+  /* Duration */
+  .sep{height:1px;background:var(--border);margin:16px 0;}
   .dur-row{display:flex;gap:8px;}
-  .dur-btn{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s;}
-  .dur-btn.active{background:var(--accent);color:var(--bg);border-color:var(--accent);}
-  .dur-btn:hover:not(.active){border-color:var(--accent2);color:var(--accent2);}
-  .btn-generate{width:100%;padding:14px;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;background:var(--accent);color:var(--bg);transition:opacity .15s,transform .1s;margin-top:4px;}
-  .btn-generate:hover{opacity:.9;}
+  .dur-btn{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s;}
+  .dur-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .dur-btn:hover:not(.active){border-color:var(--accent2);color:var(--accent);}
+
+  /* Generate button */
+  .btn-generate{width:100%;padding:15px;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;background:var(--accent);color:#fff;transition:opacity .15s,transform .1s;margin-top:4px;letter-spacing:1px;}
+  .btn-generate:hover{opacity:.88;}
   .btn-generate:active{transform:scale(.99);}
-  .btn-generate:disabled{opacity:.3;cursor:not-allowed;transform:none;}
-  .status{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:10px;line-height:1.6;}
-  .status.loading{background:rgba(251,191,36,.1);color:var(--yellow);border:1px solid rgba(251,191,36,.2);}
-  .status.success{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2);}
-  .status.error{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2);}
-  .status.info{background:rgba(232,213,163,.08);color:var(--accent);border:1px solid rgba(232,213,163,.15);}
+  .btn-generate:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+
+  /* Status */
+  .status{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;line-height:1.6;}
+  .status.loading{background:#fffbeb;color:var(--yellow);border:1px solid #fde68a;}
+  .status.success{background:#f0fdf4;color:var(--green);border:1px solid #bbf7d0;}
+  .status.error{background:#fef2f2;color:var(--red);border:1px solid #fecaca;}
+  .status.info{background:#faf7f0;color:var(--accent);border:1px solid var(--border);}
   .dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0;margin-top:4px;}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
   .dot.anim{animation:pulse 1s ease-in-out infinite;}
   .progress{height:2px;background:var(--border);border-radius:1px;overflow:hidden;margin-top:6px;}
   @keyframes bar{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
   .progress-fill{height:100%;background:var(--yellow);animation:bar 1.4s ease-in-out infinite;}
-  .download-btn{display:inline-block;margin-top:10px;padding:7px 16px;border-radius:8px;font-size:12px;font-family:'Syne',sans-serif;font-weight:600;background:var(--surface2);border:1px solid var(--border2);color:var(--accent);text-decoration:none;}
+
+  .download-btn{display:inline-block;margin-top:10px;padding:8px 18px;border-radius:8px;font-size:12px;font-family:'Syne',sans-serif;font-weight:600;background:var(--surface2);border:1px solid var(--border2);color:var(--accent);text-decoration:none;}
   .hidden{display:none!important;}
 </style>
 </head>
@@ -67,12 +89,13 @@
 <div class="container">
 
   <div class="header">
-    <h1>写真アニメーター</h1>
+    <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
   </div>
 
   <div id="statusArea"></div>
 
+  <!-- API Key -->
   <div class="card">
     <div class="card-label">fal.ai API キー</div>
     <div class="api-display" id="apiKeyDisplay">
@@ -85,6 +108,7 @@
     </div>
   </div>
 
+  <!-- Photo upload -->
   <div class="card">
     <div class="card-label">写真を選択</div>
     <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" />
@@ -97,51 +121,106 @@
     </div>
   </div>
 
+  <!-- STEP 1: Photo style -->
   <div class="card">
-    <div class="card-label">動きのスタイル</div>
-    <div class="preset-grid">
+    <div class="step-header">
+      <div class="step-badge">1</div>
+      <div>
+        <div class="step-title">写真のスタイルを選ぶ</div>
+        <div class="step-sub">写真を変換してから動画を生成します</div>
+      </div>
+    </div>
+    <div class="preset-grid" id="styleGrid">
+      <button class="preset-btn active" data-style="none"
+        onclick="selectStyle(this)">
+        <span style="font-size:20px;">📷</span>
+        <span class="preset-name">そのまま</span>
+        <span class="preset-desc">変換なし</span>
+      </button>
+      <button class="preset-btn" data-style="anime"
+        onclick="selectStyle(this)">
+        <span style="font-size:20px;">✨</span>
+        <span class="preset-name">アニメ風</span>
+        <span class="preset-desc">Webtoon・漫画風</span>
+      </button>
+      <button class="preset-btn" data-style="film8mm"
+        onclick="selectStyle(this)">
+        <span style="font-size:20px;">🎞️</span>
+        <span class="preset-name">8mmフィルム</span>
+        <span class="preset-desc">昭和レトロ</span>
+      </button>
+      <button class="preset-btn" data-style="mono"
+        onclick="selectStyle(this)">
+        <span style="font-size:20px;">⚫</span>
+        <span class="preset-name">モノトーン</span>
+        <span class="preset-desc">白黒に変換</span>
+      </button>
+      <button class="preset-btn" data-style="vintage"
+        onclick="selectStyle(this)">
+        <span style="font-size:20px;">🌅</span>
+        <span class="preset-name">ビンテージ</span>
+        <span class="preset-desc">褪せたフィルム風</span>
+      </button>
+      <button class="preset-btn" data-style="oil"
+        onclick="selectStyle(this)">
+        <span style="font-size:20px;">🎨</span>
+        <span class="preset-name">油絵風</span>
+        <span class="preset-desc">絵画タッチ</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Motion -->
+  <div class="card">
+    <div class="step-header">
+      <div class="step-badge">2</div>
+      <div>
+        <div class="step-title">動きを選ぶ</div>
+        <div class="step-sub">写真にどんな動きをつけるか選んでください</div>
+      </div>
+    </div>
+    <div class="preset-grid" id="motionGrid">
       <button class="preset-btn active"
         data-prompt="subtle motion, gentle breathing, soft wind, cinematic, high quality"
-        onclick="selectPreset(this)">
-        <span style="font-size:18px;">🕊️</span>
-        <span class="preset-name">遺影・追悼</span>
+        onclick="selectMotion(this)">
+        <span style="font-size:20px;">🕊️</span>
+        <span class="preset-name">やわらかな風</span>
         <span class="preset-desc">穏やかな動き</span>
       </button>
       <button class="preset-btn"
-        data-prompt="natural movement, gentle sway, soft breeze, portrait motion, cinematic, high quality"
-        onclick="selectPreset(this)">
-        <span style="font-size:18px;">👤</span>
-        <span class="preset-name">ポートレート</span>
-        <span class="preset-desc">自然な揺れ</span>
+        data-prompt="camera slowly pulling back moderately, rising upward steadily, wide angle reveal, subject centered at first then gradually revealed into landscape, smooth ascending motion, aerial drone feeling, cinematic, high quality"
+        onclick="selectMotion(this)">
+        <span style="font-size:20px;">🚁</span>
+        <span class="preset-name">ドローン</span>
+        <span class="preset-desc">後退しながら上昇</span>
       </button>
       <button class="preset-btn"
-        data-prompt="gentle wind, swaying trees, flowing water, clouds moving, cinematic landscape, high quality"
-        onclick="selectPreset(this)">
-        <span style="font-size:18px;">🌿</span>
-        <span class="preset-name">風景・自然</span>
-        <span class="preset-desc">木や雲が動く</span>
+        data-prompt="gentle wave motion, undulating movement, flowing like water, calm ripple effect, smooth oscillation, cinematic, high quality"
+        onclick="selectMotion(this)">
+        <span style="font-size:20px;">🌊</span>
+        <span class="preset-name">波打つ</span>
+        <span class="preset-desc">ゆったり揺れる</span>
       </button>
       <button class="preset-btn"
-        data-prompt="black and white, monochrome, grayscale, no color, desaturated, classic film, timeless, elegant motion, subtle movement, cinematic, high quality"
-        onclick="selectPreset(this)">
-        <span style="font-size:18px;">🎞</span>
-        <span class="preset-name">モノトーン</span>
-        <span class="preset-desc">白黒・モノクロ動画</span>
+        data-prompt="light rays, sparkling light, shimmering glow, bokeh effect, soft glowing particles, gentle light flicker, warm radiant light, cinematic, high quality"
+        onclick="selectMotion(this)">
+        <span style="font-size:20px;">✨</span>
+        <span class="preset-name">きらめく</span>
+        <span class="preset-desc">光がさすような動き</span>
       </button>
       <button class="preset-btn"
-        data-prompt="anime cel animation, dynamic hair motion, vibrant colors, fluid movement, japanese animation, high quality"
-        data-preset="anime"
-        onclick="selectPreset(this)">
-        <span style="font-size:18px;">✨</span>
-        <span class="preset-name">アニメ風</span>
-        <span class="preset-desc">漫画変換→動画</span>
+        data-prompt="slow cinematic pan, slow horizontal camera movement, film-like motion, steady camera glide, widescreen cinematic, slow dolly shot, high quality"
+        onclick="selectMotion(this)">
+        <span style="font-size:20px;">🎬</span>
+        <span class="preset-name">シネマ</span>
+        <span class="preset-desc">映画的なパン</span>
       </button>
       <button class="preset-btn"
-        data-prompt="super 8mm film, showa era japan 1960s 1970s, warm amber sepia tone, extremely heavy coarse film grain, thick visible grain texture, light leaks, electric crackling artifacts, film scratches, dust and debris on film, vertical film scratches, popping and crackling film damage, vintage color fading, faded browns and yellows, nostalgic home movie, slight camera shake, soft focus vignette, flickering light, intermittent exposure flicker, warm golden haze, faded saturation, old japanese family photo, damaged analog film, cinematic"
-        onclick="selectPreset(this)">
-        <span style="font-size:18px;">🎞️</span>
-        <span class="preset-name">8mmフィルム</span>
-        <span class="preset-desc">ノスタルジック</span>
+        data-prompt="wind blowing through hair and clothes, flowing fabric, natural breeze, gentle hair motion, soft wind effect, cinematic, high quality"
+        onclick="selectMotion(this)">
+        <span style="font-size:20px;">💨</span>
+        <span class="preset-name">風の中で</span>
+        <span class="preset-desc">髪や服がなびく</span>
       </button>
     </div>
 
@@ -156,17 +235,15 @@
     <div class="note" style="margin-top:6px;">長いほど生成時間とコストが増加します。</div>
   </div>
 
-  <input type="hidden" id="prompt" value="subtle motion, gentle breathing, soft wind, cinematic, high quality" />
-
   <button class="btn-generate" id="generateBtn" onclick="generate()" disabled>動画を生成する</button>
 
-  <div id="resultArea" class="hidden" style="margin-top:10px;">
+  <div id="resultArea" class="hidden" style="margin-top:12px;">
     <div class="card">
       <div class="card-label">生成結果</div>
       <div class="preview-wrap">
         <video id="resultVideo" controls loop playsinline style="width:100%;"></video>
       </div>
-      <a id="downloadLink" class="download-btn" download="animation.mp4">ダウンロード</a>
+      <a id="downloadLink" class="download-btn" download="kioku-live.mp4">ダウンロード</a>
     </div>
   </div>
 
@@ -174,6 +251,8 @@
 <script>
   const DEFAULT_API_KEY = 'ad625492-9c3f-4bba-b055-1e01edfb5557:19fa689ac4590f9bf415e0ec5351e942';
   let imageDataUrl = null;
+  let currentStyle = 'none';
+  let currentPrompt = 'subtle motion, gentle breathing, soft wind, cinematic, high quality';
 
   function toggleApiKey() {
     document.getElementById('apiKeyEdit').classList.toggle('hidden');
@@ -186,6 +265,7 @@
     return v.length > 10 ? v : DEFAULT_API_KEY;
   }
 
+  // File input
   document.getElementById('fileInput').addEventListener('change', function() {
     const file = this.files && this.files[0];
     if (!file) return;
@@ -202,10 +282,16 @@
     reader.readAsDataURL(file);
   });
 
-  function selectPreset(btn) {
-    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  function selectStyle(btn) {
+    document.querySelectorAll('#styleGrid .preset-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('prompt').value = btn.dataset.prompt;
+    currentStyle = btn.dataset.style;
+  }
+
+  function selectMotion(btn) {
+    document.querySelectorAll('#motionGrid .preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPrompt = btn.dataset.prompt;
   }
 
   function selectDuration(btn) {
@@ -224,116 +310,188 @@
       </div>`;
   }
 
-  // base64をそのまま使う（ストレージアップロード不要）
-  function getImageUrl(dataUrl) {
-    return dataUrl; // base64をそのまま渡す
-  }
-
-  async function pollQueue(model, requestId, apiKey, label, maxSec) {
-    const maxTries = Math.floor(maxSec / 3);
-    for (let i = 0; i < maxTries; i++) {
-      await new Promise(r => setTimeout(r, 3000));
-      showStatus('loading', `${label} ${(i+1)*3}秒経過...`, true);
-      try {
-        const sRes = await fetch(
-          `https://queue.fal.run/${model}/requests/${requestId}/status`,
-          { headers: { 'Authorization': `Key ${apiKey}` } }
-        );
-        const s = JSON.parse(await sRes.text());
-        if (s.status === 'COMPLETED') {
-          const rRes = await fetch(
-            `https://queue.fal.run/${model}/requests/${requestId}`,
-            { headers: { 'Authorization': `Key ${apiKey}` } }
-          );
-          return JSON.parse(await rRes.text());
+  // Canvas: グレースケール変換
+  function toGrayscale(dataUrl) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < d.data.length; i += 4) {
+          const g = 0.299*d.data[i] + 0.587*d.data[i+1] + 0.114*d.data[i+2];
+          d.data[i] = d.data[i+1] = d.data[i+2] = g;
         }
-        if (s.status === 'FAILED') throw new Error(s.error || '生成失敗');
-      } catch(e) {
-        if (e.message.includes('失敗')) throw e;
-      }
-    }
-    throw new Error(`タイムアウト（${maxSec}秒）`);
+        ctx.putImageData(d, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 0.95));
+      };
+      img.src = dataUrl;
+    });
   }
 
-  async function uploadImageForAnime(dataUrl, apiKey) {
+  // Canvas: ビンテージ変換（褪せた色調）
+  function toVintage(dataUrl) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < d.data.length; i += 4) {
+          const r = d.data[i], g = d.data[i+1], b = d.data[i+2];
+          // セピア＋フェード
+          d.data[i]   = Math.min(255, r * 0.72 + g * 0.18 + b * 0.06 + 40);
+          d.data[i+1] = Math.min(255, r * 0.28 + g * 0.56 + b * 0.06 + 20);
+          d.data[i+2] = Math.min(255, r * 0.10 + g * 0.10 + b * 0.50 + 10);
+        }
+        ctx.putImageData(d, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 0.95));
+      };
+      img.src = dataUrl;
+    });
+  }
+
+  // Canvas: 8mmフィルム変換（温かいセピア）
+  function toFilm8mm(dataUrl) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < d.data.length; i += 4) {
+          const r = d.data[i], g = d.data[i+1], b = d.data[i+2];
+          // 強めのセピア＋茶色みを強調
+          d.data[i]   = Math.min(255, r * 0.85 + g * 0.25 + b * 0.05 + 30);
+          d.data[i+1] = Math.min(255, r * 0.22 + g * 0.60 + b * 0.05 + 10);
+          d.data[i+2] = Math.min(255, r * 0.05 + g * 0.08 + b * 0.42);
+          // ノイズ追加
+          const noise = (Math.random() - 0.5) * 20;
+          d.data[i]   = Math.min(255, Math.max(0, d.data[i] + noise));
+          d.data[i+1] = Math.min(255, Math.max(0, d.data[i+1] + noise));
+          d.data[i+2] = Math.min(255, Math.max(0, d.data[i+2] + noise));
+        }
+        ctx.putImageData(d, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 0.92));
+      };
+      img.src = dataUrl;
+    });
+  }
+
+  // fal.ai FLUX APIで変換（アニメ風・油絵風）
+  async function convertWithFlux(dataUrl, prompt, apiKey) {
+    // Step1: upload
+    showStatus('loading', '① 画像をアップロード中...', true);
+    let imageUrl = null;
     try {
       const blob = await (await fetch(dataUrl)).blob();
-      const res = await fetch('https://fal.run/fal-ai/storage/upload', {
+      const upRes = await fetch('https://fal.run/fal-ai/storage/upload', {
         method: 'POST',
         headers: { 'Authorization': `Key ${apiKey}` },
         body: blob,
       });
-      if (!res.ok) return null;
-      const d = JSON.parse(await res.text());
-      return d.url || d.access_url || null;
-    } catch { return null; }
-  }
+      if (upRes.ok) {
+        const u = JSON.parse(await upRes.text());
+        imageUrl = u.url || u.access_url || null;
+      }
+    } catch(e) {}
+    if (!imageUrl) throw new Error('画像アップロードに失敗しました');
 
-  async function convertToAnime(imageDataUrl, apiKey) {
-    showStatus('loading', '① 写真をアニメ風に変換中...（20〜40秒）', true);
-
-    // base64をそのまま送信（ストレージアップロード不要）
+    // Step2: FLUX Kontext
+    showStatus('loading', '① スタイル変換中...（20〜40秒）', true);
     const res = await fetch('https://fal.run/fal-ai/flux-pro/kontext', {
       method: 'POST',
       headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        image_url: imageDataUrl,
-        prompt: 'Convert this photo into webtoon anime illustration style. Clean lineart, vibrant colors, beautiful detailed face, soft cel shading, manhwa korean comic style. Keep the same person and pose.',
-        guidance_scale: 3.5,
-        num_images: 1,
-      }),
+      body: JSON.stringify({ image_url: imageUrl, prompt, guidance_scale: 3.5, num_images: 1 }),
     });
-
     const text = await res.text();
     if (!res.ok) {
       let msg = `HTTP ${res.status}`;
       try { msg = JSON.parse(text).detail || msg; } catch {}
-      throw new Error('アニメ変換失敗: ' + msg);
+      throw new Error('スタイル変換失敗: ' + msg);
     }
-
-    let result;
-    try { result = JSON.parse(text); } catch { throw new Error('レスポンス解析失敗: ' + text.slice(0,100)); }
-
-    const animeUrl =
-      result?.images?.[0]?.url ||
-      result?.image?.url ||
-      result?.output?.images?.[0]?.url;
-
-    if (!animeUrl) throw new Error('変換画像URL取得失敗: ' + JSON.stringify(result).slice(0,150));
-    document.getElementById('previewImg').src = animeUrl;
-    return animeUrl;
+    const result = JSON.parse(text);
+    const url = result?.images?.[0]?.url || result?.image?.url || result?.output?.images?.[0]?.url;
+    if (!url) throw new Error('変換画像URL取得失敗');
+    return url;
   }
 
-    async function generate() {
+  // poll queue
+  async function pollQueue(model, requestId, apiKey, label, maxSec) {
+    for (let i = 0; i < Math.floor(maxSec/3); i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      showStatus('loading', `${label} ${(i+1)*3}秒経過...`, true);
+      try {
+        const sRes = await fetch(`https://queue.fal.run/${model}/requests/${requestId}/status`, { headers: { 'Authorization': `Key ${apiKey}` } });
+        const s = JSON.parse(await sRes.text());
+        if (s.status === 'COMPLETED') {
+          const rRes = await fetch(`https://queue.fal.run/${model}/requests/${requestId}`, { headers: { 'Authorization': `Key ${apiKey}` } });
+          return JSON.parse(await rRes.text());
+        }
+        if (s.status === 'FAILED') throw new Error(s.error || '生成失敗');
+      } catch(e) { if (e.message.includes('失敗')) throw e; }
+    }
+    throw new Error(`タイムアウト（${maxSec}秒）`);
+  }
+
+  async function generate() {
     const apiKey = getApiKey();
-    const prompt = document.getElementById('prompt').value;
-    const activePreset = document.querySelector('.preset-btn.active');
     const activeDur = document.querySelector('.dur-btn.active');
     const num_frames = parseInt(activeDur?.dataset.frames || 81);
     const frames_per_second = parseInt(activeDur?.dataset.fps || 16);
-    const isAnime = activePreset?.dataset.preset === 'anime';
 
     document.getElementById('generateBtn').disabled = true;
     document.getElementById('resultArea').classList.add('hidden');
 
     try {
-      showStatus('loading', '画像を準備中...', true);
       let imageUrl = imageDataUrl;
 
-      if (isAnime) {
-        // アニメ変換時のみアップロードが必要
-        const uploaded = await uploadImageForAnime(imageDataUrl, apiKey);
-        imageUrl = await convertToAnime(uploaded || imageDataUrl, apiKey);
-        showStatus('loading', '② 動画生成リクエストを送信中...', true);
-      } else {
-        showStatus('loading', 'fal.ai にリクエスト送信中...', true);
+      // STEP 1: スタイル変換
+      if (currentStyle === 'mono') {
+        showStatus('loading', '① モノクロに変換中...', true);
+        imageUrl = await toGrayscale(imageDataUrl);
+        document.getElementById('previewImg').src = imageUrl;
+
+      } else if (currentStyle === 'vintage') {
+        showStatus('loading', '① ビンテージ風に変換中...', true);
+        imageUrl = await toVintage(imageDataUrl);
+        document.getElementById('previewImg').src = imageUrl;
+
+      } else if (currentStyle === 'film8mm') {
+        showStatus('loading', '① 8mmフィルム風に変換中...', true);
+        imageUrl = await toFilm8mm(imageDataUrl);
+        document.getElementById('previewImg').src = imageUrl;
+
+      } else if (currentStyle === 'anime') {
+        imageUrl = await convertWithFlux(
+          imageDataUrl,
+          'Convert this photo into webtoon anime illustration style. Clean lineart, vibrant colors, beautiful detailed face, soft cel shading, manhwa korean comic style. Keep the same person and pose.',
+          apiKey
+        );
+        document.getElementById('previewImg').src = imageUrl;
+
+      } else if (currentStyle === 'oil') {
+        imageUrl = await convertWithFlux(
+          imageDataUrl,
+          'Convert this photo into oil painting style. Thick visible brushstrokes, rich colors, painterly texture, impressionist style, fine art oil painting, detailed, high quality.',
+          apiKey
+        );
+        document.getElementById('previewImg').src = imageUrl;
       }
 
+      // STEP 2: 動画生成
+      showStatus('loading', '② 動画生成リクエストを送信中...', true);
       const MODEL = 'fal-ai/wan-i2v';
       const submitRes = await fetch(`https://queue.fal.run/${MODEL}`, {
         method: 'POST',
         headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image_url: imageUrl, prompt, num_frames, frames_per_second }),
+        body: JSON.stringify({ image_url: imageUrl, prompt: currentPrompt, num_frames, frames_per_second }),
       });
       const submitText = await submitRes.text();
       if (!submitRes.ok) {
@@ -342,16 +500,15 @@
         throw new Error(msg);
       }
       const { request_id } = JSON.parse(submitText);
-      if (!request_id) throw new Error('request_id なし: ' + submitText.slice(0,80));
+      if (!request_id) throw new Error('request_id なし');
 
-      const result = await pollQueue(MODEL, request_id, apiKey, isAnime ? '② 動画生成中...' : '生成中...', 360);
+      const result = await pollQueue(MODEL, request_id, apiKey, '② 動画生成中...', 360);
       const videoUrl =
         result?.video?.url ||
         result?.output?.video?.url ||
         result?.output?.video_url ||
         (Array.isArray(result?.output) ? result.output[0]?.url : null);
-
-      if (!videoUrl) throw new Error('動画URL取得失敗: ' + JSON.stringify(result).slice(0, 200));
+      if (!videoUrl) throw new Error('動画URL取得失敗: ' + JSON.stringify(result).slice(0,200));
 
       showStatus('success', '🎉 動画の生成が完了しました！', false);
       document.getElementById('resultVideo').src = videoUrl;
