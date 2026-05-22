@@ -420,29 +420,13 @@
 
   // fal.ai FLUX APIで変換（アニメ風・油絵風）
   async function convertWithFlux(dataUrl, prompt, apiKey) {
-    // Step1: upload
-    showStatus('loading', '① 画像をアップロード中...', true);
-    let imageUrl = null;
-    try {
-      const blob = await (await fetch(dataUrl)).blob();
-      const upRes = await fetch('https://fal.run/fal-ai/storage/upload', {
-        method: 'POST',
-        headers: { 'Authorization': `Key ${apiKey}` },
-        body: blob,
-      });
-      if (upRes.ok) {
-        const u = JSON.parse(await upRes.text());
-        imageUrl = u.url || u.access_url || null;
-      }
-    } catch(e) {}
-    if (!imageUrl) throw new Error('画像アップロードに失敗しました');
-
-    // Step2: FLUX Kontext
     showStatus('loading', '① スタイル変換中...（20〜40秒）', true);
+
+    // base64をそのまま送信（ストレージアップロード不要）
     const res = await fetch('https://fal.run/fal-ai/flux-pro/kontext', {
       method: 'POST',
       headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image_url: imageUrl, prompt, guidance_scale: 3.5, num_images: 1 }),
+      body: JSON.stringify({ image_url: dataUrl, prompt, guidance_scale: 3.5, num_images: 1 }),
     });
     const text = await res.text();
     if (!res.ok) {
@@ -450,9 +434,10 @@
       try { msg = JSON.parse(text).detail || msg; } catch {}
       throw new Error('スタイル変換失敗: ' + msg);
     }
-    const result = JSON.parse(text);
+    let result;
+    try { result = JSON.parse(text); } catch { throw new Error('レスポンス解析失敗: ' + text.slice(0,100)); }
     const url = result?.images?.[0]?.url || result?.image?.url || result?.output?.images?.[0]?.url;
-    if (!url) throw new Error('変換画像URL取得失敗');
+    if (!url) throw new Error('変換画像URL取得失敗: ' + JSON.stringify(result).slice(0,150));
     return url;
   }
 
