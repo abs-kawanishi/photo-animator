@@ -273,6 +273,7 @@
     const reader = new FileReader();
     reader.onload = e => {
       imageDataUrl = e.target.result;
+      window._convertedImageUrl = null;
       document.getElementById('previewImg').src = imageDataUrl;
       document.getElementById('imgInfo').textContent = file.name.slice(0, 28);
       document.getElementById('previewArea').classList.remove('hidden');
@@ -286,6 +287,39 @@
     document.querySelectorAll('#styleGrid .preset-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentStyle = btn.dataset.style;
+    if (imageDataUrl) previewStyle(currentStyle);
+  }
+
+  async function previewStyle(style) {
+    const previewImg = document.getElementById('previewImg');
+    if (style === 'none') {
+      previewImg.src = imageDataUrl;
+      return;
+    }
+    if (style === 'mono') {
+      previewImg.src = await toGrayscale(imageDataUrl);
+    } else if (style === 'vintage') {
+      previewImg.src = await toVintage(imageDataUrl);
+    } else if (style === 'film8mm') {
+      previewImg.src = await toFilm8mm(imageDataUrl);
+    } else if (style === 'anime' || style === 'oil') {
+      const apiKey = getApiKey();
+      const label = style === 'anime' ? 'アニメ風' : '油絵風';
+      const prompt = style === 'anime'
+        ? 'Convert this photo into webtoon anime illustration style. Clean lineart, vibrant colors, beautiful detailed face, soft cel shading, manhwa korean comic style. Keep the same person and pose.'
+        : 'Convert this photo into oil painting style. Thick visible brushstrokes, rich colors, painterly texture, impressionist style, fine art oil painting, detailed, high quality.';
+      showStatus('loading', `① ${label}に変換中...（20〜40秒）`, true);
+      try {
+        const convertedUrl = await convertWithFlux(imageDataUrl, prompt, apiKey);
+        previewImg.src = convertedUrl;
+        // 変換済み画像をキャッシュして生成時に再利用
+        window._convertedImageUrl = convertedUrl;
+        showStatus('info', `✨ ${label}変換完了！確認してから「動画を生成する」を押してください`, false);
+      } catch(e) {
+        previewImg.src = imageDataUrl;
+        showStatus('error', '変換失敗: ' + e.message, false);
+      }
+    }
   }
 
   function selectMotion(btn) {
@@ -468,21 +502,19 @@
         imageUrl = await toFilm8mm(imageDataUrl);
         document.getElementById('previewImg').src = imageUrl;
 
-      } else if (currentStyle === 'anime') {
-        imageUrl = await convertWithFlux(
-          imageDataUrl,
-          'Convert this photo into webtoon anime illustration style. Clean lineart, vibrant colors, beautiful detailed face, soft cel shading, manhwa korean comic style. Keep the same person and pose.',
-          apiKey
-        );
-        document.getElementById('previewImg').src = imageUrl;
-
-      } else if (currentStyle === 'oil') {
-        imageUrl = await convertWithFlux(
-          imageDataUrl,
-          'Convert this photo into oil painting style. Thick visible brushstrokes, rich colors, painterly texture, impressionist style, fine art oil painting, detailed, high quality.',
-          apiKey
-        );
-        document.getElementById('previewImg').src = imageUrl;
+      } else if (currentStyle === 'anime' || currentStyle === 'oil') {
+        // プレビュー時に変換済みならキャッシュを使用
+        if (window._convertedImageUrl) {
+          imageUrl = window._convertedImageUrl;
+        } else {
+          const label = currentStyle === 'anime' ? 'アニメ風' : '油絵風';
+          const prompt = currentStyle === 'anime'
+            ? 'Convert this photo into webtoon anime illustration style. Clean lineart, vibrant colors, beautiful detailed face, soft cel shading, manhwa korean comic style. Keep the same person and pose.'
+            : 'Convert this photo into oil painting style. Thick visible brushstrokes, rich colors, painterly texture, impressionist style, fine art oil painting, detailed, high quality.';
+          showStatus('loading', `① ${label}に変換中...（20〜40秒）`, true);
+          imageUrl = await convertWithFlux(imageDataUrl, prompt, apiKey);
+          document.getElementById('previewImg').src = imageUrl;
+        }
       }
 
       // STEP 2: 動画生成
