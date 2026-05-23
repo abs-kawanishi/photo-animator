@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.012</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.1.000</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -558,6 +558,57 @@
     throw new Error(`タイムアウト（${maxSec}秒）`);
   }
 
+  async function generateWithReplicate(imageUrl, prompt, num_frames, frames_per_second) {
+    const duration = frames_per_second === 8 ? 10 : 5;
+
+    // Step1: /api/generate 経由でSubmit（APIキーはサーバー側で管理）
+    const submitRes = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: imageUrl,
+        prompt: prompt,
+        duration: duration,
+        resolution: '720p',
+      }),
+    });
+
+    const submitText = await submitRes.text();
+    if (!submitRes.ok) {
+      let msg = `HTTP ${submitRes.status}`;
+      try { msg = JSON.parse(submitText).error || msg; } catch {}
+      throw new Error('生成リクエスト失敗: ' + msg);
+    }
+
+    let prediction;
+    try { prediction = JSON.parse(submitText); } catch { throw new Error('レスポンス解析失敗'); }
+
+    if (prediction.status === 'succeeded') {
+      const url = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
+      if (url) return url;
+    }
+
+    const predictionId = prediction.id;
+    if (!predictionId) throw new Error('prediction ID なし');
+
+    showStatus('loading', `② 動画生成中...（ID: ${predictionId.slice(0,8)}…）`, true, 'statusArea2');
+
+    // Step2: /api/status 経由でポーリング
+    for (let i = 0; i < 120; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      showStatus('loading', `② 動画生成中... ${(i+1)*3}秒経過`, true, 'statusArea2');
+      const pollRes = await fetch(`/api/status?id=${predictionId}`);
+      const data = JSON.parse(await pollRes.text());
+      if (data.status === 'succeeded') {
+        const url = Array.isArray(data.output) ? data.output[0] : data.output;
+        if (url) return url;
+        throw new Error('動画URL取得失敗');
+      }
+      if (data.status === 'failed') throw new Error('生成失敗: ' + (data.error || ''));
+    }
+    throw new Error('タイムアウト（360秒）');
+  }
+
   async function generate() {
     const apiKey = getApiKey();
     const activeDur = document.querySelector('.dur-btn.active');
@@ -606,30 +657,9 @@
         }
       }
 
-      // STEP 2: 動画生成
+      // STEP 2: 動画生成（Replicate経由）
       clearStatus1(); showStatus('loading', '🎬 動画を生成中... リクエスト送信中', true, 'statusArea2');
-      const MODEL = 'fal-ai/wan-i2v';
-      const submitRes = await fetch(`https://queue.fal.run/${MODEL}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image_url: imageUrl, prompt: currentPrompt, num_frames, frames_per_second }),
-      });
-      const submitText = await submitRes.text();
-      if (!submitRes.ok) {
-        let msg = `HTTP ${submitRes.status}`;
-        try { msg = JSON.parse(submitText).detail || msg; } catch {}
-        throw new Error(msg);
-      }
-      const { request_id } = JSON.parse(submitText);
-      if (!request_id) throw new Error('request_id なし');
-
-      const result = await pollQueue(MODEL, request_id, apiKey, '🎬 動画生成中...', 360, 'statusArea2');
-      const videoUrl =
-        result?.video?.url ||
-        result?.output?.video?.url ||
-        result?.output?.video_url ||
-        (Array.isArray(result?.output) ? result.output[0]?.url : null);
-      if (!videoUrl) throw new Error('動画URL取得失敗: ' + JSON.stringify(result).slice(0,200));
+      const videoUrl = await generateWithReplicate(imageUrl, currentPrompt, num_frames, frames_per_second);
 
       showStatus('success', '🎉 動画の生成が完了しました！', false, 'statusArea2');
       document.getElementById('resultVideo').src = videoUrl;
