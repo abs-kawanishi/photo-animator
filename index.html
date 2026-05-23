@@ -418,7 +418,7 @@
 
   // fal.ai FLUX APIで変換（アニメ風・油絵風）
   async function convertWithFlux(dataUrl, prompt, apiKey) {
-    showStatus('loading', '① スタイル変換中...（20〜40秒）', true);
+    showStatus('loading', '🎨 STEP1 写真を変換中...（20〜40秒かかります）', true);
 
     // base64をそのまま送信（ストレージアップロード不要）
     const res = await fetch('https://fal.run/fal-ai/flux-pro/kontext', {
@@ -472,7 +472,7 @@
 
       // STEP 1: スタイル変換
       if (currentStyle === 'mono') {
-        showStatus('loading', '① モノクロに変換中...', true);
+        showStatus('loading', '⚫ STEP1 モノクロに変換中...', true);
         imageUrl = await toGrayscale(imageDataUrl);
         document.getElementById('previewImg').src = imageUrl;
 
@@ -485,7 +485,7 @@
         }
 
       } else if (currentStyle === 'film8mm') {
-        showStatus('loading', '① 8mmフィルム風に変換中...', true);
+        showStatus('loading', '🎞️ STEP1 8mmフィルム風に変換中...', true);
         imageUrl = await toFilm8mm(imageDataUrl);
         document.getElementById('previewImg').src = imageUrl;
 
@@ -505,7 +505,7 @@
       }
 
       // STEP 2: 動画生成
-      showStatus('loading', '② 動画生成リクエストを送信中...', true);
+      showStatus('loading', '🎬 STEP2 動画を生成中... リクエスト送信中', true);
       const MODEL = 'fal-ai/wan-i2v';
       const submitRes = await fetch(`https://queue.fal.run/${MODEL}`, {
         method: 'POST',
@@ -545,48 +545,31 @@
     const url = window._videoUrl;
     if (!url) return;
     const btn = document.getElementById('downloadBtn');
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    if (isIOS) {
+      // iOS: 動画を触らず長押し案内だけ表示
+      showStatus('info', '📱 上の動画を長押し →「ビデオを保存」でカメラロールに保存できます', false);
+      return;
+    }
+
+    // Android・PC: Blobダウンロード
     btn.textContent = '⏳ 準備中...';
     btn.disabled = true;
-
     try {
       const res = await fetch(url);
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
-
-      // iOSか判定
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-      if (isIOS) {
-        // iOS: videoタグで表示→長押しで保存を促す
-        const videoEl = document.getElementById('resultVideo');
-        videoEl.src = blobUrl;
-
-        // ダウンロードリンクを新しいタブで開く（Safariのダウンロードマネージャー経由）
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = 'kioku-live.mp4';
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        // iOS向け案内を表示
-        showStatus('info', '📱 動画を長押し→「ビデオを保存」でカメラロールに保存できます', false);
-        btn.textContent = '📥 動画をダウンロード';
-      } else {
-        // Android・PC: 通常ダウンロード
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = 'kioku-live.mp4';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-        btn.textContent = '📥 動画をダウンロード';
-      }
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'kioku-live.mp4';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      btn.textContent = '📥 動画をダウンロード';
     } catch(e) {
       window.open(url, '_blank');
-      showStatus('info', '📱 動画を長押し→「ビデオを保存」でカメラロールに保存できます', false);
       btn.textContent = '📥 動画をダウンロード';
     } finally {
       btn.disabled = false;
