@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.006</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.007</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -391,14 +391,20 @@
         ? 'Convert this photo into webtoon anime illustration style. Clean lineart, vibrant colors, beautiful detailed face, soft cel shading, manhwa korean comic style. Keep the same person and pose.'
         : 'Convert this photo into oil painting style. Thick visible brushstrokes, rich colors, painterly texture, impressionist style, fine art oil painting, detailed, high quality.';
       showStatus('loading', `✨ ${label}に変換中...（20〜40秒）`, true, 'statusArea1');
+      setMotionGridEnabled(false);
+      step1Selected = false;
+      checkReady();
       try {
         const convertedUrl = await convertWithFlux(imageDataUrl, prompt, apiKey);
         previewImg.src = convertedUrl;
-        // 変換済み画像をキャッシュして生成時に再利用
         window._convertedImageUrl = convertedUrl;
-        showStatus('info', `✨ 変換完了！確認してから「動画を生成する」を押してください`, false, 'statusArea1');
+        step1Selected = true;
+        setMotionGridEnabled(true);
+        showStatus('info', '👆 STEP2：動きを選んでください', false, 'statusArea1');
+        checkReady();
       } catch(e) {
         previewImg.src = imageDataUrl;
+        setMotionGridEnabled(false);
         showStatus('error', '変換失敗: ' + e.message, false, 'statusArea1');
       }
     }
