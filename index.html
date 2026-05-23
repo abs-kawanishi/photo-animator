@@ -551,16 +551,17 @@
   async function downloadVideo() {
     const url = window._videoUrl;
     if (!url) return;
-    const btn = document.getElementById('downloadBtn');
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     if (isIOS) {
-      // iOS: 動画を触らず長押し案内だけ表示
-      showStatus('info', '📱 上の動画を長押し →「ビデオを保存」でカメラロールに保存できます', false);
+      // iOS: 新しいタブで動画を開く → 長押しで保存
+      window.open(url, '_blank');
+      showStatus('info', '📱 開いた動画を長押し →「ビデオを保存」でカメラロールに保存できます', false, 'statusArea2');
       return;
     }
 
     // Android・PC: Blobダウンロード
+    const btn = document.getElementById('downloadBtn');
     btn.textContent = '⏳ 準備中...';
     btn.disabled = true;
     try {
