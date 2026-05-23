@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.1.000</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.1.001</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -601,8 +601,8 @@
       const data = JSON.parse(await pollRes.text());
       if (data.status === 'succeeded') {
         const url = Array.isArray(data.output) ? data.output[0] : data.output;
-        if (url) return url;
-        throw new Error('動画URL取得失敗');
+        if (url) return typeof url === 'string' ? url : url?.url || url?.video_url;
+        throw new Error('動画URL取得失敗: ' + JSON.stringify(data.output).slice(0,200));
       }
       if (data.status === 'failed') throw new Error('生成失敗: ' + (data.error || ''));
     }
