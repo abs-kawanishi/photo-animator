@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>キオクライブ</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Rampart+One&family=Reggae+One&family=Kaisei+Decol&family=New+Tegomin&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Rampart+One&family=Reggae+One&family=Kaisei+Decol&family=New+Tegomin&family=Hachi+Maru+Pop&family=Yomogi&display=swap');
   :root {
     --bg:#f7f5f0; --surface:#ffffff; --surface2:#f0ece4;
     --border:#e0d9ce; --border2:#ccc5b8;
@@ -20,7 +20,7 @@
 
   /* Header */
   .header{margin-bottom:24px;text-align:center;}
-  .header h1{font-size:clamp(28px,8vw,40px);font-weight:700;letter-spacing:clamp(3px,2vw,8px);color:var(--accent);font-family:'New Tegomin',serif;line-height:1.2;}
+  .header h1{font-size:clamp(28px,8vw,40px);font-weight:700;letter-spacing:clamp(3px,2vw,8px);color:var(--accent);font-family:'Yomogi',cursive;line-height:1.2;}
   .header p{font-size:clamp(9px,2.5vw,11px);color:var(--text3);margin-top:8px;font-family:'DM Mono',monospace;letter-spacing:2px;}
 
   /* Card */
@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.009</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.012</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -640,6 +640,7 @@
     } catch(err) {
       showStatus('error', 'エラー: ' + err.message, false, 'statusArea2');
     } finally {
+      setUIEnabled(true);
       checkReady();
     }
   }
