@@ -171,11 +171,11 @@
         <span class="preset-name">モノトーン</span>
         <span class="preset-desc">白黒に変換</span>
       </button>
-      <button class="preset-btn" data-style="sketch"
+      <button class="preset-btn" data-style="disney"
         onclick="selectStyle(this)">
-        <span style="font-size:20px;">✏️</span>
-        <span class="preset-name">スケッチ風</span>
-        <span class="preset-desc">鉛筆描き</span>
+        <span style="font-size:20px;">🏰</span>
+        <span class="preset-name">ディズニー風</span>
+        <span class="preset-desc">丸みのある顔</span>
       </button>
       <button class="preset-btn" data-style="oil"
         onclick="selectStyle(this)">
@@ -318,8 +318,18 @@
     }
     if (style === 'mono') {
       previewImg.src = await toGrayscale(imageDataUrl);
-    } else if (style === 'sketch') {
-      previewImg.src = await toSketch(imageDataUrl);
+    } else if (style === 'disney') {
+      const apiKey = getApiKey();
+      showStatus('loading', '① ディズニー風に変換中...（20〜40秒）', true);
+      try {
+        const url = await convertWithFlux(imageDataUrl, 'Convert this photo into Disney animation style. Soft rounded facial features, large expressive eyes, warm vibrant colors, smooth cel shading, Disney Pixar character style, charming and friendly appearance, high quality.', apiKey);
+        previewImg.src = url;
+        window._convertedImageUrl = url;
+        showStatus('info', '🏰 ディズニー風変換完了！確認してから「動画を生成する」を押してください', false);
+      } catch(e) {
+        previewImg.src = imageDataUrl;
+        showStatus('error', '変換失敗: ' + e.message, false);
+      }
     } else if (style === 'film8mm') {
       previewImg.src = await toFilm8mm(imageDataUrl);
     } else if (style === 'anime' || style === 'oil') {
@@ -385,59 +395,6 @@
     });
   }
 
-  // Canvas: スケッチ風変換（シンプルな細い輪郭線）
-  function toSketch(dataUrl) {
-    return new Promise(resolve => {
-      const img = new Image();
-      img.onload = () => {
-        const w = img.width, h = img.height;
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const src = ctx.getImageData(0, 0, w, h);
-        const dst = ctx.createImageData(w, h);
-
-        // グレースケール
-        const gray = new Float32Array(w * h);
-        for (let i = 0; i < w * h; i++) {
-          gray[i] = 0.299*src.data[i*4] + 0.587*src.data[i*4+1] + 0.114*src.data[i*4+2];
-        }
-
-        // ガウスぼかし（5x5）でノイズをしっかり除去→線をクリーンに
-        const blurred = new Float32Array(w * h);
-        for (let y = 2; y < h-2; y++) {
-          for (let x = 2; x < w-2; x++) {
-            let sum = 0, count = 0;
-            for (let dy = -2; dy <= 2; dy++)
-              for (let dx = -2; dx <= 2; dx++) {
-                sum += gray[(y+dy)*w+(x+dx)];
-                count++;
-              }
-            blurred[y*w+x] = sum / count;
-          }
-        }
-
-        // Sobelエッジ検出（シンプル2値）
-        for (let y = 2; y < h-2; y++) {
-          for (let x = 2; x < w-2; x++) {
-            const g = (dx, dy) => blurred[(y+dy)*w+(x+dx)];
-            const gx = -g(-1,-1)-2*g(-1,0)-g(-1,1)+g(1,-1)+2*g(1,0)+g(1,1);
-            const gy = -g(-1,-1)-2*g(0,-1)-g(1,-1)+g(-1,1)+2*g(0,1)+g(1,1);
-            const mag = Math.sqrt(gx*gx+gy*gy);
-            // 閾値を高くして主要輪郭のみ・完全2値
-            const line = mag > 30 ? 0 : 255;
-            const idx = (y*w+x)*4;
-            dst.data[idx] = dst.data[idx+1] = dst.data[idx+2] = line;
-            dst.data[idx+3] = 255;
-          }
-        }
-        ctx.putImageData(dst, 0, 0);
-        resolve(canvas.toDataURL('image/jpeg', 0.95));
-      };
-      img.src = dataUrl;
-    });
-  }
 
   // Canvas: 8mmフィルム変換（温かいセピア）
   function toFilm8mm(dataUrl) {
@@ -517,7 +474,7 @@
 
     document.getElementById('generateBtn').disabled = true;
     document.getElementById('resultArea').classList.add('hidden');
-    let sketchOverridePrompt = false;
+
 
     try {
       let imageUrl = imageDataUrl;
@@ -528,12 +485,13 @@
         imageUrl = await toGrayscale(imageDataUrl);
         document.getElementById('previewImg').src = imageUrl;
 
-      } else if (currentStyle === 'sketch') {
-        showStatus('loading', '① スケッチ風に変換中...', true);
-        imageUrl = await toSketch(imageDataUrl);
-        document.getElementById('previewImg').src = imageUrl;
-        // スケッチは動きを強制的に最小限に
-        sketchOverridePrompt = true;
+      } else if (currentStyle === 'disney') {
+        if (window._convertedImageUrl) {
+          imageUrl = window._convertedImageUrl;
+        } else {
+          imageUrl = await convertWithFlux(imageDataUrl, 'Convert this photo into Disney animation style. Soft rounded facial features, large expressive eyes, warm vibrant colors, smooth cel shading, Disney Pixar character style, charming and friendly appearance, high quality.', getApiKey());
+          document.getElementById('previewImg').src = imageUrl;
+        }
 
       } else if (currentStyle === 'film8mm') {
         showStatus('loading', '① 8mmフィルム風に変換中...', true);
@@ -561,7 +519,7 @@
       const submitRes = await fetch(`https://queue.fal.run/${MODEL}`, {
         method: 'POST',
         headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image_url: imageUrl, prompt: sketchOverridePrompt ? 'very subtle motion, minimal movement, gentle sway, slow, calm, sketch drawing, high quality' : currentPrompt, num_frames, frames_per_second }),
+        body: JSON.stringify({ image_url: imageUrl, prompt: currentPrompt, num_frames, frames_per_second }),
       });
       const submitText = await submitRes.text();
       if (!submitRes.ok) {
