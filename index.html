@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.004</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.005</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -133,7 +133,7 @@
     <div class="step-header">
       <div class="step-badge">1</div>
       <div>
-        <div class="step-title">写真のスタイルを選ぶ</div>
+        <div class="step-title">写真のスタイルを選ぶ <span id="step1check" style="font-size:14px;">○</span></div>
         <div class="step-sub">写真を変換してから動画を生成します</div>
       </div>
     </div>
@@ -184,7 +184,7 @@
     <div class="step-header">
       <div class="step-badge">2</div>
       <div>
-        <div class="step-title">動きを選ぶ</div>
+        <div class="step-title">動きを選ぶ <span id="step2check" style="font-size:14px;">○</span></div>
         <div class="step-sub">写真にどんな動きをつけるか選んでください</div>
       </div>
     </div>
@@ -262,9 +262,31 @@
 </div>
 <script>
   const DEFAULT_API_KEY = 'ad625492-9c3f-4bba-b055-1e01edfb5557:19fa689ac4590f9bf415e0ec5351e942';
+  let step1Selected = false;
+  let step2Selected = false;
   let imageDataUrl = null;
   let currentStyle = 'none';
   let currentPrompt = 'subtle motion, gentle breathing, soft wind, cinematic, high quality';
+
+  function checkReady() {
+    const btn = document.getElementById('generateBtn');
+    const ready = !!imageDataUrl && step1Selected && step2Selected;
+    btn.disabled = !ready;
+    // ステップ完了インジケーター更新
+    document.getElementById('step1check').textContent = step1Selected ? '✅' : '○';
+    document.getElementById('step2check').textContent = step2Selected ? '✅' : '○';
+    if (ready) {
+      btn.style.opacity = '1';
+      btn.textContent = '動画を生成する';
+    } else {
+      btn.style.opacity = '0.4';
+      const missing = [];
+      if (!imageDataUrl) missing.push('写真');
+      if (!step1Selected) missing.push('STEP1');
+      if (!step2Selected) missing.push('STEP2');
+      btn.textContent = `${missing.join('・')}を選んでください`;
+    }
+  }
 
   function toggleApiKey() {
     document.getElementById('apiKeyEdit').classList.toggle('hidden');
@@ -293,7 +315,7 @@
       area.classList.add('has-file');
       document.getElementById('uploadPlaceholder').innerHTML = `<div class="upload-icon">✅</div><div class="upload-text">${file.name.slice(0,20)}</div><div class="upload-sub">タップして変更</div>`;
       showStatus('info', `「${file.name.slice(0,20)}」を読み込みました`, false, 'statusArea1');
-      document.getElementById('generateBtn').disabled = false;
+      checkReady();
     };
     reader.readAsDataURL(file);
   });
@@ -302,6 +324,8 @@
     document.querySelectorAll('#styleGrid .preset-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentStyle = btn.dataset.style;
+    step1Selected = true;
+    checkReady();
     if (imageDataUrl) previewStyle(currentStyle);
   }
 
@@ -351,6 +375,8 @@
     document.querySelectorAll('#motionGrid .preset-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentPrompt = btn.dataset.prompt;
+    step2Selected = true;
+    checkReady();
   }
 
   function selectDuration(btn) {
@@ -547,7 +573,7 @@
     } catch(err) {
       showStatus('error', 'エラー: ' + err.message, false, 'statusArea2');
     } finally {
-      document.getElementById('generateBtn').disabled = false;
+      checkReady();
     }
   }
   async function downloadVideo() {
