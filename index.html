@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.001</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.002</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -260,7 +260,7 @@
         ① 下の「動画を全画面で開く」をタップ<br>
         ② 画面下の共有ボタン（四角に↑）をタップ<br>
         ③「ビデオを保存」または「写真に追加」をタップ<br>
-        <button onclick="window.open(window._videoUrl,'_blank')" style="margin-top:8px;width:100%;padding:10px;border:none;border-radius:8px;background:#8b6914;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">🎬 動画を全画面で開く</button>
+        <button onclick="window.open('/api/proxy?url='+encodeURIComponent(window._videoUrl),'_blank')" style="margin-top:8px;width:100%;padding:10px;border:none;border-radius:8px;background:#8b6914;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">🎬 動画を全画面で開く</button>
       </div>
     </div>
   </div>
@@ -563,8 +563,10 @@
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     if (isIOS) {
-      // iOS: 保存ガイドを表示
-      document.getElementById('iosGuide').style.display = 'block';
+      // iOS: Vercelプロキシ経由でダウンロード
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
+      window.open(proxyUrl, '_blank');
+      showStatus('info', '📱 開いた動画の共有ボタン（↑）→「ビデオを保存」でカメラロールに保存できます', false, 'statusArea2');
       return;
     }
 
