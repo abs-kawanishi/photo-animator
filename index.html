@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.005</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.006</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -264,9 +264,27 @@
   const DEFAULT_API_KEY = 'ad625492-9c3f-4bba-b055-1e01edfb5557:19fa689ac4590f9bf415e0ec5351e942';
   let step1Selected = false;
   let step2Selected = false;
+
+  // 初期状態：動きグリッドを無効化
+  window.addEventListener('DOMContentLoaded', () => {
+    setMotionGridEnabled(false);
+  });
   let imageDataUrl = null;
   let currentStyle = 'none';
   let currentPrompt = 'subtle motion, gentle breathing, soft wind, cinematic, high quality';
+
+  function setMotionGridEnabled(enabled) {
+    document.querySelectorAll('#motionGrid .preset-btn').forEach(btn => {
+      btn.disabled = !enabled;
+      btn.style.opacity = enabled ? '1' : '0.4';
+      btn.style.pointerEvents = enabled ? 'auto' : 'none';
+    });
+    document.querySelectorAll('.dur-btn').forEach(btn => {
+      btn.disabled = !enabled;
+      btn.style.opacity = enabled ? '1' : '0.4';
+      btn.style.pointerEvents = enabled ? 'auto' : 'none';
+    });
+  }
 
   function checkReady() {
     const btn = document.getElementById('generateBtn');
@@ -314,7 +332,11 @@
       const area = document.getElementById('uploadArea');
       area.classList.add('has-file');
       document.getElementById('uploadPlaceholder').innerHTML = `<div class="upload-icon">✅</div><div class="upload-text">${file.name.slice(0,20)}</div><div class="upload-sub">タップして変更</div>`;
-      showStatus('info', `「${file.name.slice(0,20)}」を読み込みました`, false, 'statusArea1');
+      showStatus('info', '👆 STEP1：写真のスタイルを選んでください', false, 'statusArea1');
+      // 動きグリッドを無効化
+      setMotionGridEnabled(false);
+      step1Selected = false;
+      step2Selected = false;
       checkReady();
     };
     reader.readAsDataURL(file);
@@ -324,8 +346,6 @@
     document.querySelectorAll('#styleGrid .preset-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentStyle = btn.dataset.style;
-    step1Selected = true;
-    checkReady();
     if (imageDataUrl) previewStyle(currentStyle);
   }
 
@@ -333,10 +353,19 @@
     const previewImg = document.getElementById('previewImg');
     if (style === 'none') {
       previewImg.src = imageDataUrl;
+      // 即完了
+      step1Selected = true;
+      setMotionGridEnabled(true);
+      showStatus('info', '👆 STEP2：動きを選んでください', false, 'statusArea1');
+      checkReady();
       return;
     }
     if (style === 'mono') {
       previewImg.src = await toGrayscale(imageDataUrl);
+      step1Selected = true;
+      setMotionGridEnabled(true);
+      showStatus('info', '👆 STEP2：動きを選んでください', false, 'statusArea1');
+      checkReady();
     } else if (style === 'disney') {
       const apiKey = getApiKey();
       showStatus('loading', '🏰 ディズニー風に変換中...（20〜40秒）', true, 'statusArea1');
@@ -351,6 +380,10 @@
       }
     } else if (style === 'film8mm') {
       previewImg.src = await toFilm8mm(imageDataUrl);
+      step1Selected = true;
+      setMotionGridEnabled(true);
+      showStatus('info', '👆 STEP2：動きを選んでください', false, 'statusArea1');
+      checkReady();
     } else if (style === 'anime' || style === 'oil') {
       const apiKey = getApiKey();
       const label = style === 'anime' ? 'アニメ風' : '油絵風';
@@ -376,6 +409,7 @@
     btn.classList.add('active');
     currentPrompt = btn.dataset.prompt;
     step2Selected = true;
+    showStatus('info', '✅ 準備完了！「動画を生成する」を押してください', false, 'statusArea1');
     checkReady();
   }
 
