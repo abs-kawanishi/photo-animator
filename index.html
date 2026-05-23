@@ -176,6 +176,8 @@
     </div>
   </div>
 
+  <div id="statusArea1"></div>
+
   <!-- STEP 2: Motion -->
   <div class="card">
     <div class="step-header">
@@ -240,7 +242,7 @@
     <div class="note" style="margin-top:6px;">長いほど生成時間とコストが増加します。</div>
   </div>
 
-  <div id="statusArea"></div>
+  <div id="statusArea2"></div>
   <div class="btn-generate-wrap">
     <button class="btn-generate" id="generateBtn" onclick="generate()" disabled>動画を生成する</button>
   </div>
@@ -288,7 +290,7 @@
       const area = document.getElementById('uploadArea');
       area.classList.add('has-file');
       document.getElementById('uploadPlaceholder').innerHTML = `<div class="upload-icon">✅</div><div class="upload-text">${file.name.slice(0,20)}</div><div class="upload-sub">タップして変更</div>`;
-      showStatus('info', `「${file.name.slice(0,20)}」を読み込みました`, false);
+      showStatus('info', `「${file.name.slice(0,20)}」を読み込みました`, false, 'statusArea1');
       document.getElementById('generateBtn').disabled = false;
     };
     reader.readAsDataURL(file);
@@ -311,15 +313,15 @@
       previewImg.src = await toGrayscale(imageDataUrl);
     } else if (style === 'disney') {
       const apiKey = getApiKey();
-      showStatus('loading', '① ディズニー風に変換中...（20〜40秒）', true);
+      showStatus('loading', '🏰 ディズニー風に変換中...（20〜40秒）', true, 'statusArea1');
       try {
         const url = await convertWithFlux(imageDataUrl, 'Convert this photo into Disney animation style. Soft rounded facial features, large expressive eyes, warm vibrant colors, smooth cel shading, Disney Pixar character style, charming and friendly appearance, high quality.', apiKey);
         previewImg.src = url;
         window._convertedImageUrl = url;
-        showStatus('info', '🏰 ディズニー風変換完了！確認してから「動画を生成する」を押してください', false);
+        showStatus('info', '🏰 変換完了！確認してから「動画を生成する」を押してください', false, 'statusArea1');
       } catch(e) {
         previewImg.src = imageDataUrl;
-        showStatus('error', '変換失敗: ' + e.message, false);
+        showStatus('error', '変換失敗: ' + e.message, false, 'statusArea1');
       }
     } else if (style === 'film8mm') {
       previewImg.src = await toFilm8mm(imageDataUrl);
@@ -329,16 +331,16 @@
       const prompt = style === 'anime'
         ? 'Convert this photo into webtoon anime illustration style. Clean lineart, vibrant colors, beautiful detailed face, soft cel shading, manhwa korean comic style. Keep the same person and pose.'
         : 'Convert this photo into oil painting style. Thick visible brushstrokes, rich colors, painterly texture, impressionist style, fine art oil painting, detailed, high quality.';
-      showStatus('loading', `① ${label}に変換中...（20〜40秒）`, true);
+      showStatus('loading', `✨ ${label}に変換中...（20〜40秒）`, true, 'statusArea1');
       try {
         const convertedUrl = await convertWithFlux(imageDataUrl, prompt, apiKey);
         previewImg.src = convertedUrl;
         // 変換済み画像をキャッシュして生成時に再利用
         window._convertedImageUrl = convertedUrl;
-        showStatus('info', `✨ ${label}変換完了！確認してから「動画を生成する」を押してください`, false);
+        showStatus('info', `✨ 変換完了！確認してから「動画を生成する」を押してください`, false, 'statusArea1');
       } catch(e) {
         previewImg.src = imageDataUrl;
-        showStatus('error', '変換失敗: ' + e.message, false);
+        showStatus('error', '変換失敗: ' + e.message, false, 'statusArea1');
       }
     }
   }
@@ -354,8 +356,10 @@
     btn.classList.add('active');
   }
 
-  function showStatus(type, msg, loading) {
-    document.getElementById('statusArea').innerHTML = `
+  function showStatus(type, msg, loading, area) {
+    const el = document.getElementById(area || 'statusArea2');
+    if (!el) return;
+    el.innerHTML = `
       <div class="status ${type}">
         <div class="dot ${loading ? 'anim' : ''}"></div>
         <div>
@@ -364,6 +368,9 @@
         </div>
       </div>`;
   }
+
+  function clearStatus1() { const el = document.getElementById('statusArea1'); if(el) el.innerHTML=''; }
+  function clearStatus2() { const el = document.getElementById('statusArea2'); if(el) el.innerHTML=''; }
 
   // Canvas: グレースケール変換
   function toGrayscale(dataUrl) {
@@ -418,7 +425,7 @@
 
   // fal.ai FLUX APIで変換（アニメ風・油絵風）
   async function convertWithFlux(dataUrl, prompt, apiKey) {
-    showStatus('loading', '🎨 STEP1 写真を変換中...（20〜40秒かかります）', true);
+    showStatus('loading', '🎨 写真を変換中...（20〜40秒かかります）', true, 'statusArea1');
 
     // base64をそのまま送信（ストレージアップロード不要）
     const res = await fetch('https://fal.run/fal-ai/flux-pro/kontext', {
@@ -440,10 +447,10 @@
   }
 
   // poll queue
-  async function pollQueue(model, requestId, apiKey, label, maxSec) {
+  async function pollQueue(model, requestId, apiKey, label, maxSec, area) {
     for (let i = 0; i < Math.floor(maxSec/3); i++) {
       await new Promise(r => setTimeout(r, 3000));
-      showStatus('loading', `${label} ${(i+1)*3}秒経過...`, true);
+      showStatus('loading', `${label} ${(i+1)*3}秒経過...`, true, area || 'statusArea2');
       try {
         const sRes = await fetch(`https://queue.fal.run/${model}/requests/${requestId}/status`, { headers: { 'Authorization': `Key ${apiKey}` } });
         const s = JSON.parse(await sRes.text());
@@ -472,7 +479,7 @@
 
       // STEP 1: スタイル変換
       if (currentStyle === 'mono') {
-        showStatus('loading', '⚫ STEP1 モノクロに変換中...', true);
+        showStatus('loading', '⚫ モノクロに変換中...', true, 'statusArea1');
         imageUrl = await toGrayscale(imageDataUrl);
         document.getElementById('previewImg').src = imageUrl;
 
@@ -485,7 +492,7 @@
         }
 
       } else if (currentStyle === 'film8mm') {
-        showStatus('loading', '🎞️ STEP1 8mmフィルム風に変換中...', true);
+        showStatus('loading', '🎞️ 8mmフィルム風に変換中...', true, 'statusArea1');
         imageUrl = await toFilm8mm(imageDataUrl);
         document.getElementById('previewImg').src = imageUrl;
 
@@ -498,14 +505,14 @@
           const prompt = currentStyle === 'anime'
             ? 'Convert this photo into webtoon anime illustration style. Clean lineart, vibrant colors, beautiful detailed face, soft cel shading, manhwa korean comic style. Keep the same person and pose.'
             : 'Convert this photo into oil painting style. Thick visible brushstrokes, rich colors, painterly texture, impressionist style, fine art oil painting, detailed, high quality.';
-          showStatus('loading', `① ${label}に変換中...（20〜40秒）`, true);
+          showStatus('loading', `✨ ${label}に変換中...（20〜40秒）`, true, 'statusArea1');
           imageUrl = await convertWithFlux(imageDataUrl, prompt, apiKey);
           document.getElementById('previewImg').src = imageUrl;
         }
       }
 
       // STEP 2: 動画生成
-      showStatus('loading', '🎬 STEP2 動画を生成中... リクエスト送信中', true);
+      clearStatus1(); showStatus('loading', '🎬 動画を生成中... リクエスト送信中', true, 'statusArea2');
       const MODEL = 'fal-ai/wan-i2v';
       const submitRes = await fetch(`https://queue.fal.run/${MODEL}`, {
         method: 'POST',
@@ -521,7 +528,7 @@
       const { request_id } = JSON.parse(submitText);
       if (!request_id) throw new Error('request_id なし');
 
-      const result = await pollQueue(MODEL, request_id, apiKey, '② 動画生成中...', 360);
+      const result = await pollQueue(MODEL, request_id, apiKey, '🎬 動画生成中...', 360, 'statusArea2');
       const videoUrl =
         result?.video?.url ||
         result?.output?.video?.url ||
@@ -529,14 +536,14 @@
         (Array.isArray(result?.output) ? result.output[0]?.url : null);
       if (!videoUrl) throw new Error('動画URL取得失敗: ' + JSON.stringify(result).slice(0,200));
 
-      showStatus('success', '🎉 動画の生成が完了しました！', false);
+      showStatus('success', '🎉 動画の生成が完了しました！', false, 'statusArea2');
       document.getElementById('resultVideo').src = videoUrl;
       window._videoUrl = videoUrl;
       document.getElementById('resultArea').classList.remove('hidden');
       document.getElementById('resultVideo').play().catch(() => {});
 
     } catch(err) {
-      showStatus('error', 'エラー: ' + err.message, false);
+      showStatus('error', 'エラー: ' + err.message, false, 'statusArea2');
     } finally {
       document.getElementById('generateBtn').disabled = false;
     }
@@ -562,7 +569,10 @@
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = 'kioku-live.mp4';
+      const now = new Date();
+      const pad = n => String(n).padStart(2,'0');
+      const fname = `kiokulive_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.mp4`;
+      a.download = fname;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
