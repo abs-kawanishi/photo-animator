@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.007</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.008</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -298,11 +298,15 @@
       btn.textContent = '動画を生成する';
     } else {
       btn.style.opacity = '0.4';
-      const missing = [];
-      if (!imageDataUrl) missing.push('写真');
-      if (!step1Selected) missing.push('STEP1');
-      if (!step2Selected) missing.push('STEP2');
-      btn.textContent = `${missing.join('・')}を選んでください`;
+      if (!imageDataUrl) {
+        btn.textContent = '写真を選んでください';
+      } else if (!step1Selected && !step2Selected) {
+        btn.textContent = '写真のスタイルと動きを選んでください';
+      } else if (!step1Selected) {
+        btn.textContent = '写真のスタイルを選んでください';
+      } else if (!step2Selected) {
+        btn.textContent = '動きを選んでください';
+      }
     }
   }
 
@@ -369,13 +373,20 @@
     } else if (style === 'disney') {
       const apiKey = getApiKey();
       showStatus('loading', '🏰 ディズニー風に変換中...（20〜40秒）', true, 'statusArea1');
+      setMotionGridEnabled(false);
+      step1Selected = false;
+      checkReady();
       try {
         const url = await convertWithFlux(imageDataUrl, 'Convert this photo into Disney animation style. Soft rounded facial features, large expressive eyes, warm vibrant colors, smooth cel shading, Disney Pixar character style, charming and friendly appearance, high quality.', apiKey);
         previewImg.src = url;
         window._convertedImageUrl = url;
-        showStatus('info', '🏰 変換完了！確認してから「動画を生成する」を押してください', false, 'statusArea1');
+        step1Selected = true;
+        setMotionGridEnabled(true);
+        showStatus('info', '👆 STEP2：動きを選んでください', false, 'statusArea1');
+        checkReady();
       } catch(e) {
         previewImg.src = imageDataUrl;
+        setMotionGridEnabled(false);
         showStatus('error', '変換失敗: ' + e.message, false, 'statusArea1');
       }
     } else if (style === 'film8mm') {
