@@ -254,6 +254,13 @@
         <video id="resultVideo" controls loop playsinline style="width:100%;"></video>
       </div>
       <button class="download-btn" id="downloadBtn" onclick="downloadVideo()">📥 動画をダウンロード</button>
+      <div id="iosGuide" style="display:none;margin-top:12px;padding:12px;background:#fff8e8;border:1px solid #f0d080;border-radius:10px;font-size:12px;line-height:1.8;color:#7a6030;">
+        <strong>📱 iPhoneでの保存方法</strong><br>
+        ① 下の「動画を全画面で開く」をタップ<br>
+        ② 画面下の共有ボタン（四角に↑）をタップ<br>
+        ③「ビデオを保存」または「写真に追加」をタップ<br>
+        <button onclick="window.open(window._videoUrl,'_blank')" style="margin-top:8px;width:100%;padding:10px;border:none;border-radius:8px;background:#8b6914;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">🎬 動画を全画面で開く</button>
+      </div>
     </div>
   </div>
 
@@ -540,6 +547,7 @@
       document.getElementById('resultVideo').src = videoUrl;
       window._videoUrl = videoUrl;
       document.getElementById('resultArea').classList.remove('hidden');
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) document.getElementById('iosGuide').style.display = 'block';
       document.getElementById('resultVideo').play().catch(() => {});
 
     } catch(err) {
@@ -554,9 +562,8 @@
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     if (isIOS) {
-      // iOS: 新しいタブで動画を開く → 長押しで保存
-      window.open(url, '_blank');
-      showStatus('info', '📱 開いた動画を長押し →「ビデオを保存」でカメラロールに保存できます', false, 'statusArea2');
+      // iOS: 保存ガイドを表示
+      document.getElementById('iosGuide').style.display = 'block';
       return;
     }
 
