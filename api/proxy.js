@@ -1,8 +1,17 @@
 export default async function handler(req, res) {
   const { url } = req.query;
-  if (!url || !url.startsWith('https://v3b.fal.media/')) {
+
+  // fal.aiとReplicateのURLを許可
+  const allowed = [
+    'https://v3b.fal.media/',
+    'https://replicate.delivery/',
+    'https://pbxt.replicate.delivery/',
+  ];
+
+  if (!url || !allowed.some(prefix => url.startsWith(prefix))) {
     return res.status(400).json({ error: 'Invalid URL' });
   }
+
   try {
     const response = await fetch(url);
     const buffer = await response.arrayBuffer();
