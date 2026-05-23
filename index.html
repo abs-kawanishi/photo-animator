@@ -418,18 +418,15 @@
           }
         }
 
-        // Sobelエッジ検出
+        // Sobelエッジ検出（シンプル2値）
         for (let y = 2; y < h-2; y++) {
           for (let x = 2; x < w-2; x++) {
             const g = (dx, dy) => blurred[(y+dy)*w+(x+dx)];
             const gx = -g(-1,-1)-2*g(-1,0)-g(-1,1)+g(1,-1)+2*g(1,0)+g(1,1);
             const gy = -g(-1,-1)-2*g(0,-1)-g(1,-1)+g(-1,1)+2*g(0,1)+g(1,1);
             const mag = Math.sqrt(gx*gx+gy*gy);
-            // 閾値：弱いエッジは完全に白に（シンプルな線のみ残す）
-            const threshold = 18;
-            const edge = mag > threshold ? Math.min(255, mag * 2.0) : 0;
-            // 白背景・黒線・グレーなし
-            const line = edge > 0 ? Math.max(0, 255 - edge * 2.5) : 255;
+            // 閾値を高くして主要輪郭のみ・完全2値
+            const line = mag > 30 ? 0 : 255;
             const idx = (y*w+x)*4;
             dst.data[idx] = dst.data[idx+1] = dst.data[idx+2] = line;
             dst.data[idx+3] = 255;
