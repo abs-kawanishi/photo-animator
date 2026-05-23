@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.002</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.003</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -563,10 +563,38 @@
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     if (isIOS) {
-      // iOS: Vercelプロキシ経由でダウンロード
-      const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
-      window.open(proxyUrl, '_blank');
-      showStatus('info', '📱 開いた動画の共有ボタン（↑）→「ビデオを保存」でカメラロールに保存できます', false, 'statusArea2');
+      const btn = document.getElementById('downloadBtn');
+      btn.textContent = '⏳ 準備中...';
+      btn.disabled = true;
+      try {
+        // プロキシ経由でBlobを取得
+        const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
+        const res = await fetch(proxyUrl);
+        const blob = await res.blob();
+        const now = new Date();
+        const pad = n => String(n).padStart(2,'0');
+        const fname = `kiokulive_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.mp4`;
+        const file = new File([blob], fname, { type: 'video/mp4' });
+
+        // Web Share APIで写真に保存
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'キオクライブ' });
+          showStatus('success', '✅ 共有メニューから「写真に保存」を選択してください', false, 'statusArea2');
+        } else {
+          // フォールバック：プロキシURLを新しいタブで開く
+          window.open(proxyUrl, '_blank');
+          showStatus('info', '📱 開いた動画の共有ボタン（↑）→「ビデオを保存」で保存できます', false, 'statusArea2');
+        }
+      } catch(e) {
+        if (e.name !== 'AbortError') {
+          const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
+          window.open(proxyUrl, '_blank');
+        }
+        showStatus('info', '📱 開いた動画の共有ボタン（↑）→「ビデオを保存」で保存できます', false, 'statusArea2');
+      } finally {
+        btn.textContent = '📥 動画をダウンロード';
+        btn.disabled = false;
+      }
       return;
     }
 
