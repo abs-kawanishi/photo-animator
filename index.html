@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.014</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.015</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -657,30 +657,9 @@
         }
       }
 
-      // STEP 2: 動画生成
+      // STEP 2: 動画生成（Replicate経由）
       clearStatus1(); showStatus('loading', '🎬 動画を生成中... リクエスト送信中', true, 'statusArea2');
-      const MODEL = 'fal-ai/wan-i2v';
-      const submitRes = await fetch(`https://queue.fal.run/${MODEL}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image_url: imageUrl, prompt: currentPrompt, num_frames, frames_per_second }),
-      });
-      const submitText = await submitRes.text();
-      if (!submitRes.ok) {
-        let msg = `HTTP ${submitRes.status}`;
-        try { msg = JSON.parse(submitText).detail || msg; } catch {}
-        throw new Error(msg);
-      }
-      const { request_id } = JSON.parse(submitText);
-      if (!request_id) throw new Error('request_id なし');
-
-      const result = await pollQueue(MODEL, request_id, apiKey, '🎬 動画生成中...', 360, 'statusArea2');
-      const videoUrl =
-        result?.video?.url ||
-        result?.output?.video?.url ||
-        result?.output?.video_url ||
-        (Array.isArray(result?.output) ? result.output[0]?.url : null);
-      if (!videoUrl) throw new Error('動画URL取得失敗: ' + JSON.stringify(result).slice(0,200));
+      const videoUrl = await generateWithReplicate(imageUrl, currentPrompt, num_frames, frames_per_second);
 
       showStatus('success', '🎉 動画の生成が完了しました！', false, 'statusArea2');
       document.getElementById('resultVideo').src = videoUrl;
