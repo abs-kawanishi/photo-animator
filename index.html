@@ -385,7 +385,7 @@
     });
   }
 
-  // Canvas: スケッチ風変換（白背景＋黒線画）
+  // Canvas: スケッチ風変換（シンプルな細い輪郭線）
   function toSketch(dataUrl) {
     return new Promise(resolve => {
       const img = new Image();
@@ -404,33 +404,34 @@
           gray[i] = 0.299*src.data[i*4] + 0.587*src.data[i*4+1] + 0.114*src.data[i*4+2];
         }
 
-        // ガウスぼかし（3x3）でノイズ軽減
+        // ガウスぼかし（5x5）でノイズをしっかり除去→線をクリーンに
         const blurred = new Float32Array(w * h);
-        const kernel = [1,2,1,2,4,2,1,2,1];
-        for (let y = 1; y < h-1; y++) {
-          for (let x = 1; x < w-1; x++) {
-            let sum = 0;
-            let k = 0;
-            for (let dy = -1; dy <= 1; dy++)
-              for (let dx = -1; dx <= 1; dx++)
-                sum += gray[(y+dy)*w+(x+dx)] * kernel[k++];
-            blurred[y*w+x] = sum / 16;
+        for (let y = 2; y < h-2; y++) {
+          for (let x = 2; x < w-2; x++) {
+            let sum = 0, count = 0;
+            for (let dy = -2; dy <= 2; dy++)
+              for (let dx = -2; dx <= 2; dx++) {
+                sum += gray[(y+dy)*w+(x+dx)];
+                count++;
+              }
+            blurred[y*w+x] = sum / count;
           }
         }
 
-        // Sobelエッジ検出（強め）
-        for (let y = 1; y < h-1; y++) {
-          for (let x = 1; x < w-1; x++) {
+        // Sobelエッジ検出
+        for (let y = 2; y < h-2; y++) {
+          for (let x = 2; x < w-2; x++) {
             const g = (dx, dy) => blurred[(y+dy)*w+(x+dx)];
             const gx = -g(-1,-1)-2*g(-1,0)-g(-1,1)+g(1,-1)+2*g(1,0)+g(1,1);
             const gy = -g(-1,-1)-2*g(0,-1)-g(1,-1)+g(-1,1)+2*g(0,1)+g(1,1);
-            const edge = Math.min(255, Math.sqrt(gx*gx+gy*gy) * 3.5);
-            // 白背景＋黒線：エッジが強いほど黒く
-            const line = Math.max(0, 255 - edge * 1.8);
-            // 鉛筆のざらつき感：薄いグレー混合
-            const pencil = Math.min(255, line * 0.85 + gray[y*w+x] * 0.12 + 15);
+            const mag = Math.sqrt(gx*gx+gy*gy);
+            // 閾値：弱いエッジは完全に白に（シンプルな線のみ残す）
+            const threshold = 18;
+            const edge = mag > threshold ? Math.min(255, mag * 2.0) : 0;
+            // 白背景・黒線・グレーなし
+            const line = edge > 0 ? Math.max(0, 255 - edge * 2.5) : 255;
             const idx = (y*w+x)*4;
-            dst.data[idx] = dst.data[idx+1] = dst.data[idx+2] = pencil;
+            dst.data[idx] = dst.data[idx+1] = dst.data[idx+2] = line;
             dst.data[idx+3] = 255;
           }
         }
