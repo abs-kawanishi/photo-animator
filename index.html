@@ -150,14 +150,14 @@
       <button class="preset-btn active" data-style="none"
         onclick="selectStyle(this)">
         <span style="font-size:20px;">📷</span>
-        <span class="preset-name">そのまま</span>
-        <span class="preset-desc">変換なし</span>
+        <span class="preset-name">変換なし</span>
+        <span class="preset-desc"></span>
       </button>
       <button class="preset-btn" data-style="anime"
         onclick="selectStyle(this)">
         <span style="font-size:20px;">✨</span>
-        <span class="preset-name">アニメ風</span>
-        <span class="preset-desc">Webtoon・漫画風</span>
+        <span class="preset-name">アニメ</span>
+        <span class="preset-desc">漫画風</span>
       </button>
       <button class="preset-btn" data-style="film8mm"
         onclick="selectStyle(this)">
@@ -171,11 +171,11 @@
         <span class="preset-name">モノトーン</span>
         <span class="preset-desc">白黒に変換</span>
       </button>
-      <button class="preset-btn" data-style="vintage"
+      <button class="preset-btn" data-style="sketch"
         onclick="selectStyle(this)">
-        <span style="font-size:20px;">🌅</span>
-        <span class="preset-name">ビンテージ</span>
-        <span class="preset-desc">褪せたフィルム風</span>
+        <span style="font-size:20px;">✏️</span>
+        <span class="preset-name">スケッチ風</span>
+        <span class="preset-desc">鉛筆描き</span>
       </button>
       <button class="preset-btn" data-style="oil"
         onclick="selectStyle(this)">
@@ -204,7 +204,7 @@
         <span class="preset-desc">穏やかな動き</span>
       </button>
       <button class="preset-btn"
-        data-prompt="camera slowly pulling back moderately, rising upward steadily, wide angle reveal, subject centered at first then gradually revealed into landscape, smooth ascending motion, aerial drone feeling, cinematic, high quality"
+        data-prompt="camera pulling back diagonally upward, moving backward and rising simultaneously at 45 degree angle, diagonal retreat upward, subject centered at start then revealed into wide landscape, smooth diagonal ascending motion, aerial drone feeling, cinematic, high quality"
         onclick="selectMotion(this)">
         <span style="font-size:20px;">🚁</span>
         <span class="preset-name">ドローン</span>
@@ -244,9 +244,8 @@
 
     <div class="card-label">動画の長さ</div>
     <div class="dur-row">
-      <button class="dur-btn active" data-frames="81" data-fps="16" onclick="selectDuration(this)">約5秒</button>
-      <button class="dur-btn" data-frames="81" data-fps="8" onclick="selectDuration(this)">約10秒</button>
-      <button class="dur-btn" data-frames="97" data-fps="8" onclick="selectDuration(this)">約12秒</button>
+      <button class="dur-btn active" data-frames="81" data-fps="16" onclick="selectDuration(this)">5秒</button>
+      <button class="dur-btn" data-frames="81" data-fps="8" onclick="selectDuration(this)">10秒</button>
     </div>
     <div class="note" style="margin-top:6px;">長いほど生成時間とコストが増加します。</div>
   </div>
@@ -261,7 +260,7 @@
       <div class="preview-wrap">
         <video id="resultVideo" controls loop playsinline style="width:100%;"></video>
       </div>
-      <a id="downloadLink" class="download-btn" download="kioku-live.mp4">ダウンロード</a>
+      <button class="download-btn" id="downloadBtn" onclick="downloadVideo()">📥 動画をダウンロード</button>
     </div>
   </div>
 
@@ -319,8 +318,8 @@
     }
     if (style === 'mono') {
       previewImg.src = await toGrayscale(imageDataUrl);
-    } else if (style === 'vintage') {
-      previewImg.src = await toVintage(imageDataUrl);
+    } else if (style === 'sketch') {
+      previewImg.src = await toSketch(imageDataUrl);
     } else if (style === 'film8mm') {
       previewImg.src = await toFilm8mm(imageDataUrl);
     } else if (style === 'anime' || style === 'oil') {
@@ -386,24 +385,56 @@
     });
   }
 
-  // Canvas: ビンテージ変換（褪せた色調）
-  function toVintage(dataUrl) {
+  // Canvas: スケッチ風変換（白背景＋黒線画）
+  function toSketch(dataUrl) {
     return new Promise(resolve => {
       const img = new Image();
       img.onload = () => {
+        const w = img.width, h = img.height;
         const canvas = document.createElement('canvas');
-        canvas.width = img.width; canvas.height = img.height;
+        canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
-        const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        for (let i = 0; i < d.data.length; i += 4) {
-          const r = d.data[i], g = d.data[i+1], b = d.data[i+2];
-          // セピア＋フェード
-          d.data[i]   = Math.min(255, r * 0.72 + g * 0.18 + b * 0.06 + 40);
-          d.data[i+1] = Math.min(255, r * 0.28 + g * 0.56 + b * 0.06 + 20);
-          d.data[i+2] = Math.min(255, r * 0.10 + g * 0.10 + b * 0.50 + 10);
+        const src = ctx.getImageData(0, 0, w, h);
+        const dst = ctx.createImageData(w, h);
+
+        // グレースケール
+        const gray = new Float32Array(w * h);
+        for (let i = 0; i < w * h; i++) {
+          gray[i] = 0.299*src.data[i*4] + 0.587*src.data[i*4+1] + 0.114*src.data[i*4+2];
         }
-        ctx.putImageData(d, 0, 0);
+
+        // ガウスぼかし（3x3）でノイズ軽減
+        const blurred = new Float32Array(w * h);
+        const kernel = [1,2,1,2,4,2,1,2,1];
+        for (let y = 1; y < h-1; y++) {
+          for (let x = 1; x < w-1; x++) {
+            let sum = 0;
+            let k = 0;
+            for (let dy = -1; dy <= 1; dy++)
+              for (let dx = -1; dx <= 1; dx++)
+                sum += gray[(y+dy)*w+(x+dx)] * kernel[k++];
+            blurred[y*w+x] = sum / 16;
+          }
+        }
+
+        // Sobelエッジ検出（強め）
+        for (let y = 1; y < h-1; y++) {
+          for (let x = 1; x < w-1; x++) {
+            const g = (dx, dy) => blurred[(y+dy)*w+(x+dx)];
+            const gx = -g(-1,-1)-2*g(-1,0)-g(-1,1)+g(1,-1)+2*g(1,0)+g(1,1);
+            const gy = -g(-1,-1)-2*g(0,-1)-g(1,-1)+g(-1,1)+2*g(0,1)+g(1,1);
+            const edge = Math.min(255, Math.sqrt(gx*gx+gy*gy) * 3.5);
+            // 白背景＋黒線：エッジが強いほど黒く
+            const line = Math.max(0, 255 - edge * 1.8);
+            // 鉛筆のざらつき感：薄いグレー混合
+            const pencil = Math.min(255, line * 0.85 + gray[y*w+x] * 0.12 + 15);
+            const idx = (y*w+x)*4;
+            dst.data[idx] = dst.data[idx+1] = dst.data[idx+2] = pencil;
+            dst.data[idx+3] = 255;
+          }
+        }
+        ctx.putImageData(dst, 0, 0);
         resolve(canvas.toDataURL('image/jpeg', 0.95));
       };
       img.src = dataUrl;
@@ -498,9 +529,9 @@
         imageUrl = await toGrayscale(imageDataUrl);
         document.getElementById('previewImg').src = imageUrl;
 
-      } else if (currentStyle === 'vintage') {
-        showStatus('loading', '① ビンテージ風に変換中...', true);
-        imageUrl = await toVintage(imageDataUrl);
+      } else if (currentStyle === 'sketch') {
+        showStatus('loading', '① スケッチ風に変換中...', true);
+        imageUrl = await toSketch(imageDataUrl);
         document.getElementById('previewImg').src = imageUrl;
 
       } else if (currentStyle === 'film8mm') {
@@ -550,7 +581,7 @@
 
       showStatus('success', '🎉 動画の生成が完了しました！', false);
       document.getElementById('resultVideo').src = videoUrl;
-      document.getElementById('downloadLink').href = videoUrl;
+      window._videoUrl = videoUrl;
       document.getElementById('resultArea').classList.remove('hidden');
       document.getElementById('resultVideo').play().catch(() => {});
 
@@ -558,6 +589,32 @@
       showStatus('error', 'エラー: ' + err.message, false);
     } finally {
       document.getElementById('generateBtn').disabled = false;
+    }
+  }
+  async function downloadVideo() {
+    const url = window._videoUrl;
+    if (!url) return;
+    const btn = document.getElementById('downloadBtn');
+    btn.textContent = '⏳ 準備中...';
+    btn.disabled = true;
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'kioku-live.mp4';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      btn.textContent = '📥 動画をダウンロード';
+    } catch(e) {
+      // フォールバック：直接URLを開く
+      window.open(url, '_blank');
+      btn.textContent = '📥 動画をダウンロード';
+    } finally {
+      btn.disabled = false;
     }
   }
 </script>
