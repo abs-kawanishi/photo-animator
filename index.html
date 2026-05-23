@@ -519,6 +519,7 @@
 
     document.getElementById('generateBtn').disabled = true;
     document.getElementById('resultArea').classList.add('hidden');
+    let sketchOverridePrompt = false;
 
     try {
       let imageUrl = imageDataUrl;
@@ -533,6 +534,8 @@
         showStatus('loading', '① スケッチ風に変換中...', true);
         imageUrl = await toSketch(imageDataUrl);
         document.getElementById('previewImg').src = imageUrl;
+        // スケッチは動きを強制的に最小限に
+        sketchOverridePrompt = true;
 
       } else if (currentStyle === 'film8mm') {
         showStatus('loading', '① 8mmフィルム風に変換中...', true);
@@ -560,7 +563,7 @@
       const submitRes = await fetch(`https://queue.fal.run/${MODEL}`, {
         method: 'POST',
         headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image_url: imageUrl, prompt: currentPrompt, num_frames, frames_per_second }),
+        body: JSON.stringify({ image_url: imageUrl, prompt: sketchOverridePrompt ? 'very subtle motion, minimal movement, gentle sway, slow, calm, sketch drawing, high quality' : currentPrompt, num_frames, frames_per_second }),
       });
       const submitText = await submitRes.text();
       if (!submitRes.ok) {
