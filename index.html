@@ -101,7 +101,7 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
-    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.008</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:1px;">ver.1.0.009</p>
     <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
 
@@ -272,6 +272,21 @@
   let imageDataUrl = null;
   let currentStyle = 'none';
   let currentPrompt = 'subtle motion, gentle breathing, soft wind, cinematic, high quality';
+
+  function setUIEnabled(enabled) {
+    // 全ボタン・入力を無効化/有効化
+    document.querySelectorAll('.preset-btn, .dur-btn, .btn-generate, input[type="file"]').forEach(el => {
+      el.disabled = !enabled;
+      el.style.pointerEvents = enabled ? 'auto' : 'none';
+      el.style.opacity = enabled ? '' : '0.4';
+    });
+    // ファイルアップロードエリア
+    const uploadArea = document.getElementById('uploadArea');
+    if (uploadArea) {
+      uploadArea.style.pointerEvents = enabled ? 'auto' : 'none';
+      uploadArea.style.opacity = enabled ? '1' : '0.4';
+    }
+  }
 
   function setMotionGridEnabled(enabled) {
     document.querySelectorAll('#motionGrid .preset-btn').forEach(btn => {
@@ -551,6 +566,7 @@
 
     document.getElementById('generateBtn').disabled = true;
     document.getElementById('resultArea').classList.add('hidden');
+    setUIEnabled(false);
 
 
     try {
