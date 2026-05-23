@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>キオクライブ</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Rampart+One&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Rampart+One&family=Reggae+One&family=Kaisei+Decol&family=New+Tegomin&display=swap');
   :root {
     --bg:#f7f5f0; --surface:#ffffff; --surface2:#f0ece4;
     --border:#e0d9ce; --border2:#ccc5b8;
@@ -20,7 +20,7 @@
 
   /* Header */
   .header{margin-bottom:24px;text-align:center;}
-  .header h1{font-size:clamp(28px,8vw,40px);font-weight:400;letter-spacing:clamp(3px,2vw,8px);color:var(--accent);font-family:'Rampart One',sans-serif;text-shadow:3px 3px 0px rgba(139,105,20,0.2);line-height:1.2;}
+  .header h1{font-size:clamp(28px,8vw,40px);font-weight:700;letter-spacing:clamp(3px,2vw,8px);color:var(--accent);font-family:'New Tegomin',serif;line-height:1.2;}
   .header p{font-size:clamp(9px,2.5vw,11px);color:var(--text3);margin-top:8px;font-family:'DM Mono',monospace;letter-spacing:2px;}
 
   /* Card */
@@ -101,22 +101,12 @@
   <div class="header">
     <h1>キオクライブ</h1>
     <p>静止画 → 動画生成 / fal.ai powered</p>
+    <p style="font-size:11px;color:var(--text3);margin-top:6px;letter-spacing:1px;">作成者：みつを川西</p>
   </div>
-
-  <div id="statusArea"></div>
 
   <!-- API Key -->
-  <div class="card">
-    <div class="card-label">fal.ai API キー</div>
-    <div class="api-display" id="apiKeyDisplay">
-      <span>••••••••••••（設定済み）</span>
-      <button class="btn-tiny" onclick="toggleApiKey()">変更する</button>
-    </div>
-    <div id="apiKeyEdit" class="hidden" style="margin-top:8px;">
-      <input type="text" id="apiKey" value="ad625492-9c3f-4bba-b055-1e01edfb5557:19fa689ac4590f9bf415e0ec5351e942" autocomplete="off" />
-      <button class="btn-tiny" onclick="toggleApiKey()" style="margin-top:6px;">閉じる</button>
-    </div>
-  </div>
+  <!-- API Key: 完全非表示 -->
+  <input type="hidden" id="apiKey" value="ad625492-9c3f-4bba-b055-1e01edfb5557:19fa689ac4590f9bf415e0ec5351e942" />
 
   <!-- Photo upload -->
   <div class="card">
@@ -250,6 +240,7 @@
     <div class="note" style="margin-top:6px;">長いほど生成時間とコストが増加します。</div>
   </div>
 
+  <div id="statusArea"></div>
   <div class="btn-generate-wrap">
     <button class="btn-generate" id="generateBtn" onclick="generate()" disabled>動画を生成する</button>
   </div>
